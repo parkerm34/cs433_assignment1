@@ -15,12 +15,12 @@ const GLuint Triangles = 0, NumVAOs = 1;
 //enum Buffer_IDs { ArrayBuffer, NumBuffers };
 const GLuint ArrayBuffer=0, NumBuffers=1;
 //enum Attrib_IDs { vPosition = 0 };
-const GLuint vPosition=0;
+const GLuint vPosition=0, vColor = 1;
 
 GLuint VAOs[NumVAOs];
 GLuint Buffers[NumBuffers];
 
-const GLuint NumVertices = 6;
+const GLuint NumVertices = 9;
 
 /////////////////////////////////////////////////////
 //  int
@@ -30,13 +30,21 @@ void init (void )
 	glGenVertexArrays( NumVAOs, VAOs );
 	glBindVertexArray( VAOs[Triangles] );
 
-	GLfloat vertices[NumVertices][2] = {
-		{ -0.90f, -0.9f },	// Triangle 1
-		{  0.85f, -0.9f },
-		{ -0.90f,  0.85f },
-		{ 0.90f, -0.85f },	// Triangle 2
-		{ 0.90f,  0.90f },
-		{ -0.85f, 0.90f }
+	struct VertexData {
+		GLubyte color[4];
+		GLfloat position[4];
+	};
+
+	VertexData vertices[NumVertices] = {
+		{{ 255,   0,   0, 255 }, { -0.90f, -0.9f }},      // Triangle 1
+                {{   0, 255,   0, 255 }, {  0.85f, -0.9f }},
+                {{   0,   0, 255, 255 }, { -0.90f,  0.85f }},
+                {{  10,  10,  10, 255 }, { 0.90f, -0.85f }},      // Triangle 2
+                {{ 100, 100, 100, 255 }, { 0.90f,  0.90f }},
+                {{ 255, 255, 255, 255 }, { -0.85f, 0.90f }},
+		{{   0,   0,   0, 255 }, { 0.00f, 0.90f }},	// Triangle 3
+		{{   0,   0,   0, 255 }, { -0.90f, -0.90f }},
+		{{   0,   0,   0, 255 }, { 0.90f, -0.90f }}
 	};
 
 	glGenBuffers( NumBuffers, Buffers );
@@ -52,7 +60,9 @@ void init (void )
 	GLuint program = LoadShaders( shaders );
 	glUseProgram( program );
 
-	glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glVertexAttribPointer( vColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VertexData), BUFFER_OFFSET(0));
+	glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), BUFFER_OFFSET(sizeof(vertices[0].color)));
+	glEnableVertexAttribArray(vColor);
 	glEnableVertexAttribArray( vPosition );
 
 }
