@@ -1,4 +1,4 @@
-#version 410 core
+#version 430 core
 
 layout(location = 1) in vec4 vPosition;
 layout(location = 2) in vec4 vColor;

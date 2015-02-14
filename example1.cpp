@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <stdio.h>
 using namespace std;
 
 #include "vgl.h"
@@ -13,23 +14,19 @@ using namespace std;
 
 const GLuint Triangles = 0, Triangle = 1, Circle = 2, NumVAOs = 3;
 const GLuint ArrayBuffer=0, TriBuffer = 1, TriColorBuffer = 2, CircBuffer = 3, CircColorBuffer = 4, NumBuffers=5;
-//const GLuint vPosition=0, vColor = 1, cPosition = 2, cColor = 3;
 const GLuint trisVert = 0, triVert = 1, triColor = 2, circVert = 3, circColor = 4;
 
 GLuint Program, Program2;
 
-const int debug = 1, debug_level2 = 1;
+const int debug = 0, debug_level2 = 1;
 bool X = 1, Y = 1, Z = 0, W = 0, S = 0;
-float C1 = 0.0f, C2 = 0.0f, C3 = 1.0f, G_RAD = 0.0f;
-int G_NUM = 0;
+float C1 = 0.0f, C2 = 0.0f, C3 = 1.0f, G_RAD = 0.5f;
+int G_NUM = 21;
 
 GLuint VAOs[NumVAOs];
 GLuint Buffers[NumBuffers];
 GLuint elementbuffer;
 GLuint elementbuffer2;
-
-GLfloat** circ_vertices;
-GLfloat * circ_vertices_memory;
 
 GLfloat circ_vert2[6][2] = {
 	{0.25, 0.43301},
@@ -43,7 +40,7 @@ GLfloat circ_vert2[6][2] = {
 const GLuint NumTrisVertices = 6, NumTriVertices = 3;
 const GLfloat Pi = 3.14159f;
 GLuint NumCircVertices = 6;
-
+/*
 struct VertexData {
 	GLubyte color[4];
 	GLfloat position[2];
@@ -56,7 +53,7 @@ struct Color {
 struct Vertex {
 	GLfloat position[4];
 };
-
+*/
 /////////////////////////////////////////////////////
 //  int
 /////////////////////////////////////////////////////
@@ -127,15 +124,8 @@ void init (void )
 	glVertexAttribPointer(triVert, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	glBindBuffer( GL_ARRAY_BUFFER, Buffers[TriColorBuffer] );
 	glVertexAttribPointer(triColor, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-/*
-	GLfloat circ_vertices[3][2] = {
-                { -0.45f, -0.45f },
-                { 0.00f, 0.45f },
-                { 0.45f, -0.45f }
-        };
-*/
+
 	glBindBuffer(GL_ARRAY_BUFFER, Buffers[CircBuffer]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(circ_vertices), circ_vertices, GL_DYNAMIC_DRAW);
 
 	glUseProgram( Program );
 
@@ -149,16 +139,18 @@ void init (void )
 
 void print_circ()
 {
-	for(int i = 0; i < G_NUM; i++)
-	{
-		for(int j = 0; j < 2; j++)
+/*	if(debug) {
+		for(int i = 0; i < G_NUM; i++)
 		{
-			cout << "circ_vert2: " << circ_vert2[i][j] << " " << &circ_vert2[i][j] << endl;
-			cout << "circ_vertices: " << circ_vertices[i][j] << " " << &circ_vertices[i][j] << endl;
+			for(int j = 0; j < 2; j++)
+			{
+				cout << "circ_vert2: " << circ_vert2[i][j] << " " << &circ_vert2[i][j] << endl;
+				cout << "circ_vertices: " << circ_vertices[i][j] << " " << &circ_vertices[i][j] << endl;
+			}
+			cout << endl;
 		}
-		cout << endl;
 	}
-}
+*/}
 
 ////////////////////////////////////////////////////////////////////
 //	display
@@ -167,94 +159,75 @@ void display (void )
 {
 	glClear( GL_COLOR_BUFFER_BIT );
 
+	if(W)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		W = !W;
+	}
+	if(S)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		S= !S;
+	}
+
 	glUseProgram( Program );
 	glBindVertexArray( VAOs[Triangles] );
-	if(!W)glDrawArrays( GL_TRIANGLES, 0, NumTrisVertices );
-	else glDrawArrays( GL_LINE_LOOP, 0, NumTrisVertices );
+	glDrawArrays( GL_TRIANGLES, 0, NumTrisVertices );
+//	else glDrawArrays( GL_LINE_LOOP, 0, NumTrisVertices );
 
 	glUseProgram( Program2 );
 	glBindVertexArray( VAOs[Triangle] );
-        if(W)glDrawArrays( GL_LINE_LOOP, 0, NumTriVertices );
-	else glDrawArrays( GL_TRIANGLES, 0, NumTrisVertices );
+        glDrawArrays( GL_TRIANGLES, 0, NumTriVertices );
+//	else glDrawArrays( GL_LINE_LOOP, 0, NumTrisVertices );
 
 	if(Z)
 	{
 		glUseProgram( Program );
 		glBindVertexArray( VAOs[Circle] );
-		if(!W)glDrawArrays(GL_TRIANGLE_FAN, 0, G_NUM );
-		else glDrawArrays( GL_LINE_LOOP, 0, G_NUM );
+		glDrawArrays(GL_TRIANGLE_FAN, 0, G_NUM+2 );
+//		else glDrawArrays( GL_LINE_LOOP, 0, G_NUM );
 	}
 
-//	if(W)
-//		glDrawArrays( GL_LINES, 0, NumVertices);
-//	else
-//		glDrawArrays( GL_TRIANGLES, 0, NumVertices);
-//	glBindVertexArray( VAOs[Triangle] );
-//	glDrawArrays( GL_TRIANGLES, 0, 6 );
-	//glDrawArrays( GL_LINES, 0, NumVertices );
 
 	glFlush();
 }
 
-void generate_circle_verts()
+void generate_circle_verts(GLuint num)
 {
 	GLfloat yval = 0.0f, xval = 0.0f;
-//	int N = 2;
-//	GLfloat** circ_vertices = new GLfloat*[2];
-	circ_vertices = new GLfloat * [G_NUM*2];
 
-	circ_vertices_memory = new GLfloat [G_NUM * 2];
+	GLfloat circ_vertices[num+1][2];
 
-	for(size_t i = 0; i < G_NUM; i++)
-	{
-		circ_vertices[i] = circ_vertices_memory + (i * 2 + (sizeof(GLfloat)*2 + 1));
-		circ_vertices[i][0] = (GLfloat)G_RAD*std::cos((2*Pi/(G_NUM))*(i+1));
-		cout << &circ_vertices[i][0] << " " << circ_vertices[i][0] << endl;
-		cout << &circ_vertices[i][1] << endl;
+	if(debug) {
+		cout << "Size of circ_vert2: " << sizeof(circ_vert2) << endl;
+		cout << "Size of circ_vertices: " << sizeof(circ_vertices)*G_NUM << endl;
+		cout << "Size of circ_vertices_memory: " << sizeof(GLfloat) << endl;
 	}
 
-	for(size_t i = 0; i < G_NUM; i++){
-//		circ_vertices[i] = new GLfloat[2];
-		xval = (GLfloat)G_RAD*std::cos((2*Pi/(G_NUM))*(i+1));
-		yval = (GLfloat)G_RAD*std::sin((2*Pi/(G_NUM))*(i+1));
-//		circ_vertices[i][0] = xval;
-	}
-	cout << "Size of circ_vert2: " << sizeof(circ_vert2) << endl;
-	cout << "Size of circ_vertices: " << sizeof(circ_vertices)*G_NUM << endl;
-	cout << "Size of circ_vertices_memory: " << sizeof(GLfloat) << endl;
-/*
-	for(int i = 1; i <= G_NUM; i++)
+	circ_vertices[0][0] = 0.0f;
+	circ_vertices[0][1] = 0.0f;
+
+	for(int i = 2; i <= num+2; i++)
 	{
 		for(int j = 1; j <= 2; j++)
 		{
 			if(j == 1)
 			{
-				xval = G_RAD*std::cos((2*Pi/(G_NUM))*i);
+				xval = G_RAD*std::cos((2*Pi/(num))*i);
 				cout << xval;
-				if(xval < 0.0001 && xval > -0.0001) xval = 0;
 				circ_vertices[i-1][j-1] = xval;
 			}
 			if(j == 2)
 			{
-				yval = G_RAD*std::sin((2*Pi/(G_NUM))*i);
+				yval = G_RAD*std::sin((2*Pi/(num))*i);
 				cout << " " << yval << endl;
-				if(yval < 0.0001 && yval > -0.0001) yval = 0;
 				circ_vertices[i-1][j-1] = yval;
 			}
 		}
 	}
-/*
-	circ_vertices = new GLfloat[3][2];
 
-	circ_vertices = {
-                { -0.45f, -0.45f },
-                { 0.00f, 0.45f },
-                { 0.45f, -0.45f }
-        };
-*/
 	glBindBuffer(GL_ARRAY_BUFFER, Buffers[CircBuffer]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(circ_vertices)*G_NUM, circ_vertices, GL_DYNAMIC_DRAW);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(circ_vert2), circ_vert2, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(circ_vertices)*num, circ_vertices, GL_DYNAMIC_DRAW);
 }
 
 void generate_circle()
@@ -266,7 +239,7 @@ void generate_circle()
 	if(debug | debug_level2)
 		cout << "Please input number of steps to estimate circle: ";
 	cin >> G_NUM;
-	generate_circle_verts();
+	generate_circle_verts(G_NUM);
 	return;
 }
 
@@ -295,7 +268,7 @@ void change_color()
 
 void idle_CB()
 {
-	glutPostRedisplay();
+//	glutPostRedisplay();
 }
 
 void key_CB(unsigned char key, int x_cord, int y_cord)
@@ -319,6 +292,7 @@ void key_CB(unsigned char key, int x_cord, int y_cord)
 			S = !S;
 			if(debug)
                         	cout << key << " received" << endl; 
+			display();
 			glutPostRedisplay();
                         break;
                 // wireFrame display : render ofbjects in wireframe. glLineWidth to specify thickness of lines
@@ -326,6 +300,7 @@ void key_CB(unsigned char key, int x_cord, int y_cord)
 			W = !W;
 			if(debug)
                         	cout << key << " received" << W << endl;
+			display();
 			glutPostRedisplay();
                         break;
                 // Generate the gemoetry for the circle, user needs to provide a floating point number for radius
@@ -335,8 +310,10 @@ void key_CB(unsigned char key, int x_cord, int y_cord)
 			if(debug)
                         	cout << key << " received" << endl;
 			generate_circle();
-			cout << "G_RAD = " << G_RAD << endl << "G_NUM = " << G_NUM << endl;
-                        break;
+			if(debug)
+				cout << "G_RAD = " << G_RAD << endl << "G_NUM = " << G_NUM << endl;
+			glutPostRedisplay();  
+                      	break;
                 // Toggle display of the two striangles, default value is on
                 case'x':
 			glUseProgram( Program );
@@ -376,7 +353,8 @@ void key_CB(unsigned char key, int x_cord, int y_cord)
                         break;
                 // Toggle display of the circle, default is off, should not be visible until after g(enerate) is used.
                 case'z':
-			print_circ();
+			if(debug)
+				print_circ();
 			Z = !Z;
 			if(Z)
 			{
@@ -416,14 +394,14 @@ int main(int argc, char* argv[])
 	glutInit( &argc, argv );
 
 	// initialize display format
-	glutInitDisplayMode( GLUT_3_2_CORE_PROFILE | GLUT_RGBA );
+	glutInitDisplayMode( GLUT_RGB );
 
 	// initialize window size
 	glutInitWindowSize( 512, 512 );
 
 
-	//glutInitContextVersion( 3, 2 );
-	//glutInitContextProfile( GLUT_CORE_PROFILE );// GLUT_COMPATIBILITY_PROFILE );
+	glutInitContextVersion( 4, 3 );
+	glutInitContextProfile( GLUT_CORE_PROFILE );// GLUT_COMPATIBILITY_PROFILE );
 
 	// create window with name from executable
 	glutCreateWindow( argv[0] );

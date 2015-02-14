@@ -9,7 +9,9 @@ CPPFLAGS = -g
 .cpp.o:
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@  $<
 
-LIBS = -framework OpenGL -framework GLUT -lglew 
+#LIBS = -framework OpenGL -framework GLUT -lglew 
+
+LIBS = -lGL -lGLU -lglut -lm -ljpeg -Wall -lGLEW
 
 SRCS = example1.cpp LoadShaders.cpp
 OBJS = example1.o LoadShaders.o 

@@ -7,8 +7,8 @@
 #ifndef __LOAD_SHADERS_H__
 #define __LOAD_SHADERS_H__
 
-#include <OpenGL/glu.h>
-#include <GLUT/glut.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
 
 #ifdef __cplusplus
 extern "C" {
