@@ -1,0 +1,424 @@
+// ch01.cpp : Defines the entry point for the console application.
+//
+//////////////////////////////////////////////////////////
+//  triangles.cpp  from the OpenGL Red Book   Chapter 1
+//////////////////////////////////////////////////////////
+
+#include <iostream>
+using namespace std;
+
+#include "vgl.h"
+#include "LoadShaders.h"
+
+const GLuint Triangles = 0, Triangle = 1, Circle = 2, NumVAOs = 3;
+const GLuint ArrayBuffer=0, TriBuffer = 1, CircleBuffer = 2, NumBuffers=3;
+const GLuint vPosition=0, vColor = 1, cPosition = 2, cColor = 3;
+const GLuint trisVert = 0, trisColor = 1, triVert = 2, triColor = 3;
+
+GLuint Program, Program2;
+
+const int debug = 1, debug_level2 = 1;
+bool X = 1, Y = 1, Z = 0, W = 0, S = 0;
+float C1 = 0.0f, C2 = 0.0f, C3 = 1.0f, G_RAD = 0.0f;
+int G_NUM = 0;
+
+GLuint VAOs[NumVAOs];
+GLuint Buffers[NumBuffers];
+GLuint elementbuffer;
+GLuint elementbuffer2;
+
+const GLuint NumVertices = 9;
+
+/////////////////////////////////////////////////////
+//  int
+/////////////////////////////////////////////////////
+void init (void )
+{
+//	glGenVertexArrays( 1, VAOs[Triangles] );
+	glGenVertexArrays( NumVAOs, VAOs );
+	glBindVertexArray( VAOs[Triangles]);
+//	glBindVertexArray(VAOs[Triangle] );
+//	glBindVertexArray( VAOs[Circle] );
+
+	struct VertexData {
+		GLubyte color[4];
+		GLfloat position[4];
+	};
+
+/*	VertexData tris_vertices[6] = {
+		{{   0,   0, 255, 255 }, { -0.90f, -0.90f }},     // Triangle 1 top
+                {{   0,   0, 255, 255 }, { 0.85f, -0.90f }},   // Triangle 1 bottom left
+                {{   0,   0, 255, 255 }, { -0.90f, 0.85f }},    // Triangle 1 bottom right
+		{{   0,   0, 255, 255 }, { 0.90f, -0.85f }},     // Triangle 2 top
+                {{   0,   0, 255, 255 }, { 0.90f, 0.90f }},   // Triangle 2 bottom left
+                {{   0,   0, 255, 255 }, { -0.85f, 0.90f }}    // Triangle 2 bottom right
+	};
+*/
+
+	struct Vertex {
+		GLfloat position[4];
+	};
+
+	Vertex tris_vertices[6] = {
+		{ -0.90f, -0.90f },
+		{ 0.85f, -0.90f },
+		{ -0.90f, 0.85f },
+		{ 0.90f, -0.85f },
+		{ 0.90f, 0.90f },
+		{ -0.85f, 0.90f }
+	};
+
+	Vertex tri_vertices[3] = {
+                { 0.00f, 0.90f },
+                { -0.90f, -0.90f },
+                { 0.90f, -0.90f }
+        };
+
+/*	VertexData tri_vertices[3] = {
+		{{ 255,   0,   0, 255 }, { 0.00f, 0.90f }},	// Triangle 3 top
+		{{   0,   0, 255, 255 }, { -0.90f, -0.90f }},	// Triangle 3 bottom left
+		{{   0, 255,   0, 255 }, { 0.90f, -0.90f }}	// Triangle 3 bottom right
+	};
+*/
+//	glGenBuffers( NumBuffers, Buffers );
+	glGenBuffers( 1, &Buffers[ArrayBuffer] );
+	glBindBuffer( GL_ARRAY_BUFFER, Buffers[ArrayBuffer] );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(tris_vertices), tris_vertices, GL_STATIC_DRAW );
+	glBindBuffer( GL_ARRAY_BUFFER, Buffers[ArrayBuffer] );
+
+/*	glGenBuffers( 1, &Buffers[Triangles] );
+	glBindBuffer( GL_ARRAY_BUFFER, Buffers[Triangles] );
+        glBufferData( GL_ARRAY_BUFFER, sizeof(tri_vertices), tris_vertices, GL_STATIC_DRAW );
+        glBindBuffer( GL_ARRAY_BUFFER, Buffers[Triangles] );
+*/
+	glGenVertexArrays( 1, &Buffers[ArrayBuffer] );
+	glBindVertexArray( VAOs[Triangles] );
+
+	glEnableVertexAttribArray(trisVert);
+//	glBindVertexArray( VAOs[Triangle] );
+//	glGenBuffers( 1, &Buffers[ArrayBuffer] );
+	glBindBuffer( GL_ARRAY_BUFFER, Buffers[ArrayBuffer] );
+	glVertexAttribPointer(trisVert, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(0) );
+
+//	glBufferData( GL_ARRAY_BUFFER, sizeof(tris_vertices), tris_vertices, GL_STATIC_DRAW );
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+
+
+	ShaderInfo  shaders[] = {
+		{ GL_VERTEX_SHADER, "triangles.vert" },
+		{ GL_FRAGMENT_SHADER, "triangles.frag" },
+		{ GL_NONE, NULL }
+	};
+
+	Program = LoadShaders( shaders );
+	glUseProgram( Program );
+
+
+	glVertexAttribPointer( trisVert, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(0));
+//	glEnableVertexAttribArray(trisColor);
+	glEnableVertexAttribArray( trisVert );
+
+//	glGenBuffers( 1, &Buffers[TriBuffer] );
+
+//	glBindVertexArray(VAOs[Triangle] );
+
+//	glGenBuffers( 1, &Buffers[TriBuffer] );
+
+//	glBindBuffer( GL_ARRAY_BUFFER, Buffers[TriBuffer] );
+//        glBufferData( GL_ARRAY_BUFFER, sizeof(tri_vertices), tri_vertices, GL_STATIC_DRAW );
+//	glVertexAttribPointer( trisColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VertexData), BUFFER_OFFSET(0));
+//        glVertexAttribPointer( trisVert, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), BUFFER_OFFSET(sizeof(tri_vertices[0].color)));
+
+//	glEnableVertexAttribArray(trisColor);
+  //      glEnableVertexAttribArray(trisVert);
+/*
+	Vertex tri_vertices[3] = {
+		{ 0.00f, 0.90f },
+		{ -0.90f, -0.90f },
+		{ 0.90f, -0.90f }
+	};
+*/
+	glGenBuffers( 1, &Buffers[TriBuffer] );
+	glBindBuffer( GL_ARRAY_BUFFER, Buffers[TriBuffer] );
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof(tri_vertices), tri_vertices, GL_STATIC_DRAW );
+
+/*	ShaderInfo shaders2[] = {
+		{ GL_VERTEX_SHADER, "triangle.vert" },
+                { GL_FRAGMENT_SHADER, "triangle.frag" },
+                { GL_NONE, NULL }
+        };
+*/
+//	Program2 = LoadShaders( shaders2 );
+//	glUseProgram( Program2 );
+
+//	glVertexAttribPointer( trisVert, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(sizeof(tris_vertices)) );
+//	glEnableVertexAttribArray( trisVert );
+/*
+	ShaderInfo  shaders[] = {
+                { GL_VERTEX_SHADER, "triangles.vert" },
+                { GL_FRAGMENT_SHADER, "triangles.frag" },
+                { GL_NONE, NULL }
+        };
+
+        Program = LoadShaders( shaders );
+        glUseProgram( Program );
+*/
+
+}
+
+////////////////////////////////////////////////////////////////////
+//	display
+////////////////////////////////////////////////////////////////////
+void display (void )
+{
+	glClear( GL_COLOR_BUFFER_BIT );
+//	glBindVertexArray( VAOs[Triangles] );
+	glBindVertexArray( elementbuffer );
+	glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+	glBindVertexArray( VAOs[Triangle] );
+	glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+//	if(W)
+//		glDrawArrays( GL_LINES, 0, NumVertices);
+//	else
+//		glDrawArrays( GL_TRIANGLES, 0, NumVertices);
+//	glBindVertexArray( VAOs[Triangle] );
+//	glDrawArrays( GL_TRIANGLES, 0, 6 );
+	//glDrawArrays( GL_LINES, 0, NumVertices );
+
+	glFlush();
+}
+/*
+void generate_circle_verts()
+{
+//	glGenVertexArrays( NumVAOs, VAOs );
+        glBindVertexArray( VAOs[Circle] );
+
+        struct VertexData {
+                GLubyte color[4];
+                GLfloat position[4];
+        };
+
+        VertexData vertices[3] = {
+                {{   0, 255, 255, 255 }, { -0.90f, -0.90f }},     // Triangle 1 top
+                {{   0, 255, 255, 255 }, { 0.85f, -0.90f }},   // Triangle 1 bottom left
+                {{   0, 255, 255, 255 }, { 0.90f, -0.85f }}     // Triangle 2 top
+        };
+
+        glGenBuffers( NumBuffers, Buffers );
+        glBindBuffer( GL_ARRAY_BUFFER, Buffers[ArrayBuffer] );
+        glBufferData( GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW );
+
+        ShaderInfo  shaders[] = {
+                { GL_VERTEX_SHADER, "triangles.vert" },
+                { GL_FRAGMENT_SHADER, "triangles.frag" },
+                { GL_NONE, NULL }
+        };
+
+        GLuint program = LoadShaders( shaders );
+        glUseProgram( program );
+
+        glVertexAttribPointer( vColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VertexData), BUFFER_OFFSET(0));
+        glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), BUFFER_OFFSET(sizeof(vertices[0].color)));
+        glEnableVertexAttribArray(vColor);
+        glEnableVertexAttribArray( vPosition );
+glutPostRedisplay();
+	return;
+}
+*/
+void generate_circle()
+{
+	fflush(stdin);
+	if(debug | debug_level2)
+		cout << "User has selected to generate a circle. Please input radius value as float: ";
+	cin >> G_RAD;
+	if(debug | debug_level2)
+		cout << "Please input number of steps to estimate circle: ";
+	cin >> G_NUM;
+//	generate_circle_verts();
+	return;
+}
+
+void set_color()
+{
+	GLint TrisLoc = glGetUniformLocation(Program, "myColor");
+	float newCol[4] = { C1, C2, C3, 1.0 };
+	glProgramUniform4fv(Program, TrisLoc, 1, newCol);
+}
+
+void change_color()
+{
+	fflush(stdin);
+	if(debug | debug_level2)
+		cout << "User has selected to change the color. Please input color value for red as float: ";
+	cin >> C1;
+	if(debug | debug_level2)
+		cout << "Please input color value for green as float: ";
+	cin >> C2;
+	if(debug | debug_level2)
+                cout << "Please input color value for blue as float: ";
+        cin >> C3;
+	set_color();
+	return;
+}
+
+void idle_CB()
+{
+	glutPostRedisplay();
+}
+
+void key_CB(unsigned char key, int x_cord, int y_cord)
+{
+	switch (key)
+	{
+		// Specify the color for both triangles and circle, user provides 3 floating point numbers
+		// through stdin for the color, in the range 0. to 1., in the order of red, green, blue components.
+		// The default initial color is blue (0., 0., 1.)
+		case'c':
+			if(debug)
+				cout << key << " received" << endl;
+			change_color();
+			glutPostRedisplay();
+			break;
+		// shaded surface display : renders objects as solid surfaces
+		// the drawing or rendering mode in OpenGL mode is controlled through a call to glPolygonMode.
+		// After changing the OpenGL rasterization (drawing) mode, you can force a redraw through GLUT
+		// using glutPostRedisplay function call.
+                case's':
+			S = !S;
+			if(debug)
+                        	cout << key << " received" << endl; 
+			glutPostRedisplay();
+                        break;
+                // wireFrame display : render ofbjects in wireframe. glLineWidth to specify thickness of lines
+                case'w':
+			W = !W;
+			if(debug)
+                        	cout << key << " received" << endl;
+			glutPostRedisplay();
+                        break;
+                // Generate the gemoetry for the circle, user needs to provide a floating point number for radius
+		// value in the range of 0. to 1., and a integer number for steps to use when generating triangles
+		// to approx the circle
+                case'g':
+			if(debug)
+                        	cout << key << " received" << endl;
+			generate_circle();
+			cout << "G_RAD = " << G_RAD << endl << "G_NUM = " << G_NUM << endl;
+                        break;
+                // Toggle display of the two striangles, default value is on
+                case'x':
+			X = !X;
+			if(X)
+			{
+				glEnableVertexAttribArray( trisColor );
+				glEnableVertexAttribArray( trisVert );
+			}
+			if(!X)
+			{
+				glDisableVertexAttribArray( trisColor );
+				glDisableVertexAttribArray( trisVert );
+			}
+			if(debug)
+                        	cout << key << " received " << X << endl;
+			glutPostRedisplay();
+                        break;
+                // Toggle display of the single triangle, default value is on
+               case'y':
+			Y = !Y;
+			if(Y)
+			{
+                                glEnableVertexAttribArray( trisVert );
+				glEnableVertexAttribArray( trisColor );
+			}
+                        if(!Y)
+			{
+                                glDisableVertexAttribArray( trisVert );
+				glDisableVertexAttribArray( trisColor );
+			}
+			if(debug)
+                        	cout << key << " received" << endl;
+			glutPostRedisplay();
+                        break;
+                // Toggle display of the circle, default is off, should not be visible until after g(enerate) is used.
+                case'z':
+			Z = !Z;
+			if(debug)
+                        	cout << key << " received" << endl;
+			glutPostRedisplay();
+                        break;
+                // Quits application
+                case'q':
+			if(debug)
+				cout << key << " received" << endl;
+                        exit(0); 
+                        break;
+                
+                default:
+			if(debug)
+                        	cout << "[default] " << key << " received and not handled." << endl;
+                        break;
+	}
+}                
+
+
+////////////////////////////////////////////////////////////////////////
+//	main
+////////////////////////////////////////////////////////////////////////
+int main(int argc, char* argv[])
+{
+	// initialize GLUT system
+	glutInit( &argc, argv );
+
+	// initialize display format
+	glutInitDisplayMode( GLUT_3_2_CORE_PROFILE | GLUT_RGBA );
+
+	// initialize window size
+	glutInitWindowSize( 512, 512 );
+
+
+	//glutInitContextVersion( 3, 2 );
+	//glutInitContextProfile( GLUT_CORE_PROFILE );// GLUT_COMPATIBILITY_PROFILE );
+
+	// create window with name from executable
+	glutCreateWindow( argv[0] );
+
+	glutIdleFunc(idle_CB);
+
+	glutKeyboardFunc(key_CB);
+
+	glewExperimental = GL_TRUE;	// added for glew to work!
+	if ( glewInit() )
+	{
+		cerr << "Unable to initialize GLEW ... exiting" << endl;
+		exit (EXIT_FAILURE );
+	}
+
+	// code from OpenGL 4 Shading Language cookbook, second edition
+	const GLubyte *renderer = glGetString( GL_RENDERER );
+	const GLubyte *vendor = glGetString( GL_VENDOR );
+	const GLubyte *version = glGetString( GL_VERSION );
+	const GLubyte *glslVersion = glGetString (GL_SHADING_LANGUAGE_VERSION );
+	GLint major, minor;
+	glGetIntegerv( GL_MAJOR_VERSION, &major );
+	glGetIntegerv( GL_MINOR_VERSION, &minor );
+
+	cout << "GL Vendor            :" << vendor << endl;
+	cout << "GL Renderer          :" << renderer  << endl;
+	cout << "GL Version (string)  :" << version << endl;
+	cout << "GL Version (integer) :" << major << " " << minor << endl;
+	cout << "GLSL Version         :" << glslVersion << endl;
+	//
+	//GLint nExtensions;
+	//glGetIntegerv( GL_NUM_EXTENSIONS, &nExtensions );
+	//for ( int i = 0; i < nExtensions; i++ )
+	//	cout << glGetStringi( GL_EXTENSIONS, i )  << endl;
+
+	init();
+	glutDisplayFunc( display );
+	glutMainLoop();
+
+	return 0;
+}
+
